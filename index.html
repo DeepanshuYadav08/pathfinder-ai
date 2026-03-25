@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PathFinder AI: Multi-Algorithm Search Visualizer</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <div>
+            <div class="logo">PATH<span>FINDER</span>.ai</div>
+            <div class="tagline">PathFinder AI: Multi-Algorithm Search Visualizer</div>
+        </div>
+        <div class="header-right">
+            <span class="unit-badge u1">UNIT 1 · Problem Formulation</span>
+            <span class="unit-badge u2">UNIT 2 · Uninformed Search</span>
+            <span class="unit-badge u3">UNIT 3 · Informed Search</span>
+        </div>
+    </header>
+
+    <div class="main">
+
+        <!-- LEFT PANEL -->
+        <div class="left-panel">
+
+            <div>
+                <div class="section-label">Algorithm</div>
+                <div class="algo-grid" id="algo-grid">
+                    <button class="algo-btn unit2 active" data-algo="bfs">
+                        <span class="algo-name">BFS</span>
+                        <span class="algo-unit">UNIT 2 · Uninformed</span>
+                    </button>
+                    <button class="algo-btn unit2" data-algo="dfs">
+                        <span class="algo-name">DFS</span>
+                        <span class="algo-unit">UNIT 2 · Uninformed</span>
+                    </button>
+                    <button class="algo-btn unit2" data-algo="ucs">
+                        <span class="algo-name">UCS</span>
+                        <span class="algo-unit">UNIT 2 · Uniform Cost</span>
+                    </button>
+                    <button class="algo-btn unit2" data-algo="greedy">
+                        <span class="algo-name">Greedy Best-First</span>
+                        <span class="algo-unit">UNIT 2 · Informed</span>
+                    </button>
+                    <button class="algo-btn unit3" data-algo="astar">
+                        <span class="algo-name">A* Algorithm</span>
+                        <span class="algo-unit">UNIT 3 · Optimal Informed</span>
+                    </button>
+
+                </div>
+            </div>
+
+            <div>
+                <div class="section-label">Drawing Tool</div>
+                <div class="tool-row">
+                    <button class="tool-btn active-start" id="tool-start" onclick="setTool('start')">▶ Start</button>
+                    <button class="tool-btn" id="tool-end" onclick="setTool('end')">◉ End</button>
+                    <button class="tool-btn" id="tool-wall" onclick="setTool('wall')">█ Wall</button>
+                    <button class="tool-btn" id="tool-erase" onclick="setTool('erase')">⌫ Erase</button>
+                </div>
+            </div>
+
+            <div class="slider-wrap">
+                <div class="slider-label">
+                    Speed <span id="speed-label">50ms</span>
+                </div>
+                <input type="range" id="speed-slider" min="5" max="200" value="50" oninput="updateSpeed()">
+            </div>
+
+            <div class="slider-wrap">
+                <div class="slider-label">
+                    Grid Size <span id="size-label">30×20</span>
+                </div>
+                <input type="range" id="size-slider" min="10" max="50" value="30" oninput="updateGridSize()">
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:6px;">
+                <button class="action-btn btn-run" id="run-btn" onclick="runAlgorithm()">▶ RUN</button>
+                <button class="action-btn btn-clear" onclick="clearPath()">⟳ Clear Path</button>
+                <button class="action-btn btn-clear" onclick="clearAll()">✕ Clear All</button>
+                <button class="action-btn btn-maze" onclick="generateMaze()">⊞ Generate Maze</button>
+            </div>
+
+            <div>
+                <div class="section-label">Statistics</div>
+                <div class="stats-box">
+                    <div class="stat-row"><span class="stat-label">Visited</span><span class="stat-val"
+                            id="stat-visited">—</span></div>
+                    <div class="stat-row"><span class="stat-label">Path Length</span><span class="stat-val"
+                            id="stat-path">—</span></div>
+                    <div class="stat-row"><span class="stat-label">Time</span><span class="stat-val"
+                            id="stat-time">—</span></div>
+                    <div class="stat-row"><span class="stat-label">Status</span><span class="stat-val"
+                            id="stat-status">Ready</span></div>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-label">Legend</div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:#00f5a0"></div>Start Node
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:#f5a000"></div>End Node
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:#1a1a2e"></div>Wall
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:#0a3020"></div>Visited
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:#0a2030"></div>Frontier
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:#f500a0"></div>Path Found
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- GRID CANVAS -->
+        <div class="grid-area">
+            <canvas id="grid-canvas"></canvas>
+            <div class="status-bar">
+                <div class="status-dot" id="status-dot"></div>
+                <span id="status-text">Click on grid to place start, end, and walls. Then press RUN.</span>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="right-panel">
+
+            <div>
+                <div class="section-label">Algorithm Info</div>
+                <div class="info-card" id="algo-info">
+                    <strong id="info-name">BFS</strong>
+                    <div id="info-desc">Explores all neighbors level by level. Guarantees shortest path in unweighted
+                        graphs.</div>
+                    <div class="complexity-row"><span class="key">Time</span><span class="val"
+                            id="info-time-c">O(V+E)</span></div>
+                    <div class="complexity-row"><span class="key">Space</span><span class="val"
+                            id="info-space-c">O(V)</span></div>
+                    <div class="prop-list" id="prop-list">
+                        <div class="prop-item">
+                            <div class="prop-dot yes"></div><span>Complete</span>
+                        </div>
+                        <div class="prop-item">
+                            <div class="prop-dot yes"></div><span>Optimal</span>
+                        </div>
+                        <div class="prop-item">
+                            <div class="prop-dot no"></div><span>Uses Heuristic</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-label">Unit Mapping</div>
+                <div class="info-card">
+                    <strong>Problem Formulation</strong>
+                    <div style="font-size:0.58rem;color:var(--text-dim);line-height:1.7">
+                        <div>• <span style="color:var(--text)">State:</span> (row, col) on grid</div>
+                        <div>• <span style="color:var(--text)">Initial:</span> Start cell</div>
+                        <div>• <span style="color:var(--text)">Goal:</span> End cell</div>
+                        <div>• <span style="color:var(--text)">Operators:</span> Move ↑↓←→</div>
+                        <div>• <span style="color:var(--text)">Cost:</span> 1 per step</div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-label">Properties</div>
+                <div class="info-card">
+                    <table class="compare-table" id="compare-table">
+                        <tr>
+                            <th>Algo</th>
+                            <th>Opt</th>
+                            <th>Heur</th>
+                        </tr>
+                        <tr id="row-bfs" class="active-row">
+                            <td>BFS</td>
+                            <td>✓</td>
+                            <td>✗</td>
+                        </tr>
+                        <tr id="row-dfs">
+                            <td>DFS</td>
+                            <td>✗</td>
+                            <td>✗</td>
+                        </tr>
+                        <tr id="row-ucs">
+                            <td>UCS</td>
+                            <td>✓</td>
+                            <td>✗</td>
+                        </tr>
+                        <tr id="row-greedy">
+                            <td>Greedy</td>
+                            <td>✗</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr id="row-astar">
+                            <td>A*</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+
+                    </table>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-label">Agent Type</div>
+                <div class="info-card" id="agent-info">
+                    <strong>Goal-Based Agent</strong>
+                    <div style="font-size:0.58rem;color:var(--text-dim);line-height:1.6">Uses goal state to decide
+                        actions. Rational agent maximizing performance measure (shortest path).</div>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-label">Progress</div>
+                <div class="info-card">
+                    <div style="font-size:0.6rem;color:var(--text-dim)">Exploration</div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="progress-bar"></div>
+                    </div>
+                    <div style="font-size:0.6rem;color:var(--text-dim);margin-top:6px">Path Quality</div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="quality-bar" style="background:var(--accent3)"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
